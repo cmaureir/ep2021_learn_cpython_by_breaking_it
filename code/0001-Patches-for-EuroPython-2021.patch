@@ -1,0 +1,377 @@
+From f2c4f35ab6b7c7f6cc40d515c9c6fb9f4066b8d9 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Cristi=C3=A1n=20Maureira-Fredes?=
+ <Cristian.Maureira-Fredes@qt.io>
+Date: Fri, 30 Jul 2021 02:30:46 +0200
+Subject: [PATCH] Patches for EuroPython 2021
+
+---
+ Include/patchlevel.h          |  2 +-
+ Objects/clinic/listobject.c.h | 43 ++++++++++++++++++
+ Objects/listobject.c          | 83 +++++++++++++++++++++++++++++++++++
+ Objects/longobject.c          | 12 ++++-
+ Objects/setobject.c           | 27 ++++++++++++
+ Parser/pegen.c                | 15 ++++++-
+ Python/bltinmodule.c          | 13 ++++++
+ Python/getversion.c           |  4 +-
+ 8 files changed, 194 insertions(+), 5 deletions(-)
+
+diff --git a/Include/patchlevel.h b/Include/patchlevel.h
+index f37c4d48e3..ea8e32fe1b 100644
+--- a/Include/patchlevel.h
++++ b/Include/patchlevel.h
+@@ -23,7 +23,7 @@
+ #define PY_RELEASE_SERIAL       0
+ 
+ /* Version as a string */
+-#define PY_VERSION              "3.11.0a0"
++#define PY_VERSION              "4.0.0.1"
+ /*--end constants--*/
+ 
+ /* Version as a single 4-byte hex number, e.g. 0x010502B2 == 1.5.2b2.
+diff --git a/Objects/clinic/listobject.c.h b/Objects/clinic/listobject.c.h
+index 01e31d76cf..eb70e92359 100644
+--- a/Objects/clinic/listobject.c.h
++++ b/Objects/clinic/listobject.c.h
+@@ -94,6 +94,16 @@ PyDoc_STRVAR(list_extend__doc__,
+ "\n"
+ "Extend list by appending elements from the iterable.");
+ 
++PyDoc_STRVAR(list_dneppa__doc__,
++"dneppa($self, object, /)\n"
++"--\n"
++"\n"
++"Add a new value to the beginning of a list.");
++
++#define LIST_DNEPPA_METHODDEF    \
++    {"dneppa", (PyCFunction)list_dneppa, METH_O, list_dneppa__doc__},
++
++
+ #define LIST_EXTEND_METHODDEF    \
+     {"extend", (PyCFunction)list_extend, METH_O, list_extend__doc__},
+ 
+@@ -142,6 +152,19 @@ list_pop(PyListObject *self, PyObject *const *args, Py_ssize_t nargs)
+     return return_value;
+ }
+ 
++
++#define LIST_ROCK_METHODDEF    \
++    {"rock", (PyCFunction)(void(*)(void))list_rock, METH_FASTCALL, list_rock__doc__},
++
++PyDoc_STRVAR(list_rock__doc__,
++"rock($self, index=-1, /)\n"
++"--\n"
++"\n"
++"Remove and return item at index (default last) but ROCKING.\n"
++"\n"
++"Raises IndexError if list is empty or index is out of range.");
++
++
+ PyDoc_STRVAR(list_sort__doc__,
+ "sort($self, /, *, key=None, reverse=False)\n"
+ "--\n"
+@@ -197,6 +220,26 @@ list_sort(PyListObject *self, PyObject *const *args, Py_ssize_t nargs, PyObject
+     return return_value;
+ }
+ 
++PyDoc_STRVAR(list_salsa__doc__,
++"salsa($self)\n"
++"--\n"
++"\n"
++"Salsa the list in salsa-steps order and return None.\n"
++"\n"
++);
++
++#define LIST_SALSA_METHODDEF    \
++    {"salsa", (PyCFunction)list_salsa, METH_NOARGS, list_salsa__doc__},
++
++static PyObject *
++list_salsa_impl(PyListObject *self);
++
++static PyObject *
++list_salsa(PyListObject *self, PyObject *Py_UNUSED(ignored))
++{
++    return list_salsa_impl(self);
++}
++
+ PyDoc_STRVAR(list_reverse__doc__,
+ "reverse($self, /)\n"
+ "--\n"
+diff --git a/Objects/listobject.c b/Objects/listobject.c
+index 6eb7dce759..4cd94f6181 100644
+--- a/Objects/listobject.c
++++ b/Objects/listobject.c
+@@ -303,6 +303,20 @@ PyList_Insert(PyObject *op, Py_ssize_t where, PyObject *newitem)
+ static int
+ app1(PyListObject *self, PyObject *v)
+ {
++    if (PyUnicode_Check(v)) {
++        PyObject* str = PyUnicode_AsUTF8String(v);
++        const char *bytes = PyBytes_AsString(str);
++        if (!strcmp(bytes, "red")) {
++            system("obs-cli scene switch 'Scene Red' --password 'vaso con agua'");
++        } else if (!strcmp(bytes, "green")) {
++            system("obs-cli scene switch 'Scene Green' --password 'vaso con agua'");
++        } else if (!strcmp(bytes, "blue")) {
++            system("obs-cli scene switch 'Scene Blue' --password 'vaso con agua'");
++        } else if (!strcmp(bytes, "help")) {
++            system("obs-cli scene switch 'Scene 1' --password 'vaso con agua'");
++        }
++    }
++
+     Py_ssize_t n = PyList_GET_SIZE(self);
+ 
+     assert (v != NULL);
+@@ -324,6 +338,24 @@ PyList_Append(PyObject *op, PyObject *newitem)
+     return -1;
+ }
+ 
++/*[clinic input]
++list.dneppa
++
++    index: Py_ssize_t
++    object: object
++    /
++
++Insert object before index.
++[clinic start generated code]*/
++
++static PyObject *
++list_dneppa(PyListObject *self, PyObject *object)
++{
++    if (ins1(self, 0, object) == 0)
++        Py_RETURN_NONE;
++    return NULL;
++}
++
+ /* Methods */
+ 
+ static void
+@@ -1032,6 +1064,24 @@ list_pop_impl(PyListObject *self, Py_ssize_t index)
+     return v;
+ }
+ 
++/*[clinic input]
++list.rock
++
++    index: Py_ssize_t = -1
++    /
++
++Remove and return item at index (default last) but ROCKING.
++
++Raises IndexError if list is empty or index is out of range.
++[clinic start generated code]*/
++
++static PyObject *
++list_rock(PyListObject *self, PyObject *const *args, Py_ssize_t nargs)
++{
++    printf("Rocking an item out of this list! 🤘🎸\n");
++    return list_pop(self, args, nargs);
++}
++
+ /* Reverse a slice of a list in place, from lo up to (exclusive) hi. */
+ static void
+ reverse_slice(PyObject **lo, PyObject **hi)
+@@ -2503,6 +2553,36 @@ PyList_AsTuple(PyObject *v)
+     return _PyTuple_FromArray(((PyListObject *)v)->ob_item, Py_SIZE(v));
+ }
+ 
++static PyObject *
++list_salsa_impl(PyListObject *self)
++{
++    if (Py_SIZE(self) > 1) {
++        int nr_items = Py_SIZE(self);
++        int indexes[nr_items];
++        for (int idx = 0; idx < nr_items; ++idx) {
++            indexes[idx] = idx;
++        }
++        for (int idx = 0; idx < nr_items; ++idx) {
++          size_t j = idx + rand() / (RAND_MAX / (nr_items - idx) + 1);
++          int t = indexes[j];
++          indexes[j] = indexes[idx];
++          indexes[idx] = t;
++        }
++
++        PyListObject *new_list = (PyListObject*)PyList_New(nr_items);
++        for (int i = 0; i < Py_SIZE(self); i++) {
++            PyObject *obj = self->ob_item[i];
++            PyList_SetItem((PyObject*)new_list, indexes[i], obj);
++        }
++
++        for (int i = 0; i < Py_SIZE(self); i++) {
++            PyObject *obj = new_list->ob_item[i];
++            PyList_SetItem((PyObject*)self, i, obj);
++        }
++    }
++    Py_RETURN_NONE;
++}
++
+ /*[clinic input]
+ list.index
+ 
+@@ -2782,14 +2862,17 @@ static PyMethodDef list_methods[] = {
+     LIST_CLEAR_METHODDEF
+     LIST_COPY_METHODDEF
+     LIST_APPEND_METHODDEF
++    LIST_DNEPPA_METHODDEF
+     LIST_INSERT_METHODDEF
+     LIST_EXTEND_METHODDEF
+     LIST_POP_METHODDEF
++    LIST_ROCK_METHODDEF
+     LIST_REMOVE_METHODDEF
+     LIST_INDEX_METHODDEF
+     LIST_COUNT_METHODDEF
+     LIST_REVERSE_METHODDEF
+     LIST_SORT_METHODDEF
++    LIST_SALSA_METHODDEF
+     {"__class_getitem__", (PyCFunction)Py_GenericAlias, METH_O|METH_CLASS, PyDoc_STR("See PEP 585")},
+     {NULL,              NULL}           /* sentinel */
+ };
+diff --git a/Objects/longobject.c b/Objects/longobject.c
+index d9127b31fd..142805b520 100644
+--- a/Objects/longobject.c
++++ b/Objects/longobject.c
+@@ -3809,7 +3809,17 @@ long_true_divide(PyObject *v, PyObject *w)
+     negate = (Py_SIZE(a) < 0) ^ (Py_SIZE(b) < 0);
+     if (b_size == 0) {
+         PyErr_SetString(PyExc_ZeroDivisionError,
+-                        "division by zero");
++"\n __________________ "
++"\n< division by zero >"
++"\n ------------------ "
++"\n        \\   ^__^"
++"\n         \\  (oo)\\_______"
++"\n            (__)\\       )\\/\\"
++"\n                ||----w |"
++"\n                ||     ||"
++                        );
++        if (PyLong_AsLong(v) == 0)
++            system("cmatrix");
+         goto error;
+     }
+     if (a_size == 0)
+diff --git a/Objects/setobject.c b/Objects/setobject.c
+index caff85c9e3..a9cd27dbbd 100644
+--- a/Objects/setobject.c
++++ b/Objects/setobject.c
+@@ -940,6 +940,7 @@ set_update(PySetObject *so, PyObject *args)
+     Py_RETURN_NONE;
+ }
+ 
++
+ PyDoc_STRVAR(update_doc,
+ "Update a set with the union of itself and others.");
+ 
+@@ -949,6 +950,28 @@ PyDoc_STRVAR(update_doc,
+    can be retrieved or updated in a single cache line.
+ */
+ 
++static void fast_print(char *in)
++{
++    char *i;
++    for (i = in; *i != '\0'; i++) {
++        printf("%c", *i);
++        fflush(stdout);
++        if (*i == '.')
++            usleep(200000);
++        else
++            usleep(70000);
++    }
++    printf("\n");
++}
++
++static PyObject *
++set_addanotherset(PySetObject *so, PyObject *args)
++{
++    fast_print("Hey 😒...");
++    fast_print("if this is a favor, at least say please");
++    Py_RETURN_NONE;
++}
++
+ static PyObject *
+ make_new_set(PyTypeObject *type, PyObject *iterable)
+ {
+@@ -2043,6 +2066,10 @@ static PyMethodDef set_methods[] = {
+      union_doc},
+     {"update",          (PyCFunction)set_update,        METH_VARARGS,
+      update_doc},
++    {"addanothersetplease",          (PyCFunction)set_update,        METH_VARARGS,
++     NULL},
++    {"addanotherset",          (PyCFunction)set_addanotherset,        METH_VARARGS,
++     NULL},
+     {"__class_getitem__", (PyCFunction)Py_GenericAlias, METH_O|METH_CLASS, PyDoc_STR("See PEP 585")},
+     {NULL,              NULL}   /* sentinel */
+ };
+diff --git a/Parser/pegen.c b/Parser/pegen.c
+index f697f007bb..632ce4495e 100644
+--- a/Parser/pegen.c
++++ b/Parser/pegen.c
+@@ -266,7 +266,20 @@ raise_unclosed_parentheses_error(Parser *p) {
+        int error_col = p->tok->parencolstack[p->tok->level-1];
+        RAISE_ERROR_KNOWN_LOCATION(p, PyExc_SyntaxError,
+                                   error_lineno, error_col, error_lineno, -1,
+-                                  "'%c' was never closed",
++                                  "it looks like '%c' was never closed"
++"\n            /"
++"\n           /"
++"\n          /"
++"\n     __"
++"\n    /  \\"
++"\n    |  |"
++"\n    @  @"
++"\n    |  |"
++"\n    || |/"
++"\n    || ||"
++"\n    |\\_/|"
++"\n    \\___/"
++"\n    ",
+                                   p->tok->parenstack[p->tok->level-1]);
+ }
+ 
+diff --git a/Python/bltinmodule.c b/Python/bltinmodule.c
+index bfe21ad6d0..0ff8f8cd1e 100644
+--- a/Python/bltinmodule.c
++++ b/Python/bltinmodule.c
+@@ -2919,6 +2919,18 @@ PyTypeObject PyZip_Type = {
+     PyObject_GC_Del,                    /* tp_free */
+ };
+ 
++static PyObject*
++europython(PyObject *self)
++{
++    system("obs-cli scene switch 'Scene Europython' --password 'vaso con agua'");
++    Py_RETURN_NONE;
++}
++
++PyDoc_STRVAR(europython_doc,
++"europython()\n\
++\n\
++Prepare your webcam for the EuroPython 2021 conference.");
++
+ 
+ static PyMethodDef builtin_methods[] = {
+     {"__build_class__", (PyCFunction)(void(*)(void))builtin___build_class__,
+@@ -2955,6 +2967,7 @@ static PyMethodDef builtin_methods[] = {
+     {"max",             (PyCFunction)(void(*)(void))builtin_max,        METH_VARARGS | METH_KEYWORDS, max_doc},
+     {"min",             (PyCFunction)(void(*)(void))builtin_min,        METH_VARARGS | METH_KEYWORDS, min_doc},
+     {"next",            (PyCFunction)(void(*)(void))builtin_next,       METH_FASTCALL, next_doc},
++    {"europython",      (PyCFunction)(void(*)(void))europython,       METH_NOARGS, europython_doc},
+     BUILTIN_ANEXT_METHODDEF
+     BUILTIN_OCT_METHODDEF
+     BUILTIN_ORD_METHODDEF
+diff --git a/Python/getversion.c b/Python/getversion.c
+index c32b6f9d60..706466972e 100644
+--- a/Python/getversion.c
++++ b/Python/getversion.c
+@@ -9,7 +9,7 @@ const char *
+ Py_GetVersion(void)
+ {
+     static char version[250];
+-    PyOS_snprintf(version, sizeof(version), "%.80s (%.80s) %.80s",
+-                  PY_VERSION, Py_GetBuildInfo(), Py_GetCompiler());
++    PyOS_snprintf(version, sizeof(version), "%.80s (EuroPython version) %.80s",
++                  PY_VERSION, Py_GetCompiler());
+     return version;
+ }
+-- 
+2.32.0
+

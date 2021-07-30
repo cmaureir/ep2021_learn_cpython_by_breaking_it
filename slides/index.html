@@ -1,0 +1,597 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <title>Learn CPython by breaking it</title>
+
+  <link rel="stylesheet" href="dist/reset.css">
+  <link rel="stylesheet" href="dist/reveal.css">
+  <link rel="stylesheet" href="css/self-theme.css" id="theme">
+  <link rel="stylesheet" href="css/self.css" id="theme">
+  <link rel="stylesheet" href="css/extras.css">
+
+  <!-- Theme used for syntax highlighted code -->
+  <link rel="stylesheet" href="plugin/highlight/monokai.css">
+
+  <!-- Printing and PDF exports -->
+  <script>
+  if( window.location.search.match( /print-pdf/gi ) ) {
+    var link = document.createElement( 'link' );
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = 'css/print/pdf.css';
+    document.getElementsByTagName( 'head' )[0].appendChild( link );
+  }
+  </script>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <!--***************************************************************************-->
+      <section>
+        <h1>Learn CPython<h1>
+        <h2><i class="ep-orange">by <i class="ep-green">b̷̘̓r̶̲̈́ë̸͎́a̶̧̓k̵̯̈́ĭ̵̜ń̴̰g̴͈̿</i> it</i></h2>
+        <p style="font-size: 80%;margin-top: 10%;">
+          Dr. <i class="ep-orange">Cristián</i> Maureira-Fredes<br/>
+        </p>
+        <p style="font-size: 60%">
+          <i class="ep-green">Writing code at</i> <img class="plain" src="img/qt.png" style="height: 50px; vertical-align: middle; background: rgba(0, 0, 0, 0);">
+          <br/>
+          @cmaureir<br/>
+          <img class="plain" src="img/twitter.png" style="background: rgba(0,0,0,0);height: 40px;">
+          <img class="plain" src="img/github_white.png"  style="background: rgba(0,0,0,0);height: 40px;">
+          <img class="plain" src="img/linkedin.png"  style="background: rgba(0,0,0,0);height: 40px;"><br/>
+        </p>
+      </section>
+      <!--***************************************************************************-->
+
+      <section>
+        <h3>Learning <i class="ep-orange">something new</i><br/> can be scary 👻</h3>
+      </section>
+
+      <section>
+        <img style="width: 50%;" src="img/motor.jpg" />
+        <h2 class="fragment" data-fragment-index="1">🔨 + 🚗</h2>
+      </section>
+
+      <section>
+        <h3>Before getting our <i class="ep-green">hands dirty</i></h3>
+        <h3>let's check a <i class="ep-orange">few</i> things 📝</h3>
+      </section>
+
+      <section>
+        <h3><i class="ep-orange">CPython</i>?</h3>
+        <h3>do you mean Python? 🤔</h3>
+      </section>
+
+      <!-- check interpreters -->
+      <section data-transition="slide-in fade-out">
+        <img style="width: 90%;" src="img/interpreters1.png" />
+      </section>
+
+      <section data-transition="fade-in slide-out">
+        <img style="width: 90%;" src="img/interpreters2.png" />
+      </section>
+
+      <section>
+        <h3>Python <i class="ep-orange">Implementations</i></h3>
+        <div id="left70">
+          <img class="fragment" data-fragment-index="1" style="width: 150px;" src="img/micropython.png" />
+          <img class="fragment" data-fragment-index="2" style="width: 150px;" src="img/rustpython.svg" />
+          <img class="fragment" data-fragment-index="3" style="width: 200px;" src="img/jython.png" />
+          <img class="fragment" data-fragment-index="4" style="width: 200px; background: white; padding: 10px;" src="img/pypy.svg" />
+          <img class="fragment" data-fragment-index="5" style="width: 200px;" src="img/pyston.jpg" />
+        </div>
+        <div id="right30">
+          <ul style="font-size: 70%; padding-top: 60px;">
+            <li class="fragment" data-fragment-index="1">MicroPython</li>
+            <li class="fragment" data-fragment-index="2">RustPython</li>
+            <li class="fragment" data-fragment-index="3">Jython</li>
+            <li class="fragment" data-fragment-index="4">PyPy</li>
+            <li class="fragment" data-fragment-index="5">Pyston</li>
+            <li class="fragment" data-fragment-index="6"><i class="ep-green">Stackless Python</i></li>
+            <li class="fragment" data-fragment-index="6"><i class="ep-green">IronPython</i></li>
+            <li class="fragment" data-fragment-index="6"><i class="ep-green">Pyjion</i></li>
+            <li class="fragment" data-fragment-index="7"><i class="ep-orange">CPython 🎉</i></li>
+          </ul>
+        </div>
+      </section>
+
+      <section>
+        <h3>The <i class="ep-orange">CPython</i> code</h3>
+        <img src="img/cpython_repo.png" />
+      </section>
+
+      <section>
+        <h3><i class="ep-orange">CPython</i> structure (1/2)</h3>
+        <pre class="fragment fade-in" data-fragment-index="1"style="font-size: 40%;width: 90%;"><code class="bash" data-trim data-noescape>
+        Doc/      Misc/     Parser/             LICENSE          config.sub*   pyconfig.h.in
+        Grammar/  Modules/  Programs/           Makefile.pre.in  configure*    setup.py
+        Include/  Objects/  Python/             README.rst       configure.ac
+        Lib/      PC/       Tools/              aclocal.m4       install-sh*
+        Mac/      PCbuild/  CODE_OF_CONDUCT.md  config.guess*    netlify.toml
+        </code></pre>
+      </section>
+
+      <section>
+        <h3><i class="ep-orange">CPython</i> structure (2/2)</h3>
+        <ul>
+            <li class="fragment fade-in" data-fragment-index="1"><i class="blue-light">Doc</i> - Official documentation</li>
+            <li class="fragment fade-in" data-fragment-index="2"><i class="blue-light">Include</i> - Interpreter header files</li>
+            <li class="fragment fade-in" data-fragment-index="3"><i class="blue-light">Grammar</i> - PEG grammar (PEP 617)</li>
+            <li class="fragment fade-in" data-fragment-index="4"><i class="blue-light">Lib</i> - stdlib in pure Python</li>
+            <li class="fragment fade-in" data-fragment-index="5"><i class="blue-light">Modules</i> - stdlib in C</li>
+            <li class="fragment fade-in" data-fragment-index="6"><i class="blue-light">Objects</i> - built-in types</li>
+            <li class="fragment fade-in" data-fragment-index="7"><i class="blue-light">Python</i> - CPython runtime</li>
+        </ul>
+      </section>
+
+
+      <section>
+        <h3>Building your own Python</h3>
+        <ul style="font-size: 80%;">
+          <li class="fragment">Clone the repo
+        <pre class="fragment fade-in" data-fragment-index="1"style="font-size: 60%;width: 90%;"><code class="bash" data-trim data-noescape>
+        git clone https://github.com/python/cpython.git
+        </code></pre></li>
+          <li class="fragment">Configure
+        <pre class="fragment fade-in" data-fragment-index="1"style="font-size: 60%;width: 90%;"><code class="bash" data-trim data-noescape>
+        # you can select a build and install directory
+        cd cpython/
+        ./configure
+        </code></pre>
+          </li>
+          <li class="fragment">Compile, and enjoy!
+        <pre class="fragment fade-in" data-fragment-index="1"style="font-size: 60%;width: 90%;"><code class="bash" data-trim data-noescape>
+        # For 'X' processes
+        make -j X
+        ./python
+        Python 3.11.0a0 (Jul 27 2021, 22:56:41) [GCC 11.1.0] on linux
+        Type "help", "copyright", "credits" or "license" for more information.
+        >>> print("yay!")
+        yay!
+        </code></pre>
+      </section>
+
+      <section>
+        <h3>A <i class="ep-orange">/super brief/</i> introduction to C</h3>
+        <h3>😨</h3>
+      </section>
+
+      <section data-transition="slide-in fade-out">
+        <h3>Python and C</h3>
+        <div id="left">
+          <pre class="fragment fade-in" data-fragment-index="1"style="font-size: 40%;width: 90%;"><code class="python" data-trim data-noescape>
+          <span class="fragment" data-fragment-index="1"># This is a comment</span>
+          <span class="fragment" data-fragment-index="2">import my_module</span>
+
+          <span class="fragment" data-fragment-index="3">def add(a, b):</span>
+          <span class="fragment" data-fragment-index="3">    return a + b</span>
+
+
+          <span class="fragment" data-fragment-index="4">def main():</span>
+          <span class="fragment" data-fragment-index="5">    msg = "hello world"</span>
+          <span class="fragment" data-fragment-index="5">    x = 3</span>
+          <span class="fragment" data-fragment-index="5">    y = 0.14</span>
+          <span class="fragment" data-fragment-index="6">    z = add(x, y)</span>
+          <span class="fragment" data-fragment-index="6">    print("%f" % z)</span>
+
+          <span class="fragment" data-fragment-index="4">if __name__ == "__main__":</span>
+          <span class="fragment" data-fragment-index="4">    main()</span>
+          </code></pre>
+        </div>
+        <div id="right">
+          <pre class="fragment fade-in" data-fragment-index="1"style="font-size: 40%;width: 90%;"><code class="c" data-trim data-noescape>
+          <span class="fragment" data-fragment-index="1">// This is a comment</span>
+          <span class="fragment" data-fragment-index="2">#include &lt;my_module.h&gt;</span>
+
+          <span class="fragment" data-fragment-index="3">float add(int a, float b) {</span>
+          <span class="fragment" data-fragment-index="3">    return a + b;</span>
+          <span class="fragment" data-fragment-index="3">}</span>
+
+          <span class="fragment" data-fragment-index="4">int main(){</span>
+          <span class="fragment" data-fragment-index="5">    char msg[] = "hello world";</span>
+          <span class="fragment" data-fragment-index="5">    int x = 3;</span>
+          <span class="fragment" data-fragment-index="5">    float y = 0.14;</span>
+          <span class="fragment" data-fragment-index="6">    float z = add(x, y);</span>
+          <span class="fragment" data-fragment-index="6">    printf("%f", z)</span>
+
+          <span class="fragment" data-fragment-index="4">    return 0;</span>
+          <span class="fragment" data-fragment-index="4">}</span>
+
+          </code></pre>
+        </div>
+      </section>
+
+      <section data-transition="fade-in slide-out">
+        <h3>Python and C <i class="ep-orange">(+type annotations)</i></h3>
+        <div id="left">
+          <pre style="font-size: 40%;width: 90%;"><code class="python" data-trim data-noescape>
+          <span># This is a comment</span>
+          <span>import my_module</span>
+
+          <span>def add(a: int, b: float) -&gt; float:</span>
+          <span>    return a + b</span>
+
+
+          <span>def main() -&gt; None:</span>
+          <span>    msg: str = "hello world"</span>
+          <span>    x: int = 3</span>
+          <span>    y: float = 0.14</span>
+          <span>    z: float = add(x, y)</span>
+          <span>    print("%f" % z)</span>
+
+          <span>if __name__ == "__main__":</span>
+          <span>    main()</span>
+          </code></pre>
+        </div>
+        <div id="right">
+          <pre style="font-size: 40%;width: 90%;"><code class="c" data-trim data-noescape>
+          <span>// This is a comment</span>
+          <span>#include &lt;my_module.h&gt;</span>
+
+          <span>float add(int a, float b) {</span>
+          <span>    return a + b;</span>
+          <span>}</span>
+
+          <span>int main(){</span>
+          <span>    char msg[] = "hello world";</span>
+          <span>    int x = 3;</span>
+          <span>    float y = 0.14;</span>
+          <span>    float z = add(x, y);</span>
+          <span>    printf("%f", z)</span>
+
+          <span>    return 0;</span>
+          <span>}</span>
+
+          </code></pre>
+        </div>
+      </section>
+
+      <section>
+        <h4>Python can also look <i class="red">complicated</i> 🥲</h4>
+
+        <div class="fragment">
+        <pre style="font-size: 100%;width: 90%;"><code class="python" data-trim data-noescape>
+        _="_=%r;print(_%%_)";print(_%_)
+        </code></pre>
+        </div>
+
+        <div class="fragment">
+        <pre style="font-size: 100%;width: 90%;"><code class="python" data-trim data-noescape>
+        # For a given number 'n'
+        n&amp;~-n&lt;1
+        </code></pre>
+        </div>
+      </section>
+
+      <section>
+        <h4>But more importantly...</h4>
+        <h3>Congratulations, <i class="ep-orange">you learned C </i>🥳</h3>
+        <h4><i class="red">(well...a little bit)</i></h4>
+      </section>
+
+      <section>
+        <h3><i class="ep-orange">Don't be afraid!</i></h3>
+        <h4>It's not so difficult to start <i class="red">breaking</i> things ⭐</h4>
+        <img style="width: 40%;" src="img/fire.gif" />
+        <p class="fragment" style="font-size: 80%;">
+        ...and Python is a normal project, just like <i class="ep-orange">ours</i>.
+        </p>
+      </section>
+
+      <section>
+        <h3><i class="red">WARNING</i></h3>
+        We are going to dive into CPython code.
+        <img style="width: 30%;" src="img/nervous.gif" />
+      </section>
+
+      <section>
+        <h3>Where and what to break?</h3>
+        <h4><i class="ep-green">Let's use the power of <code class="red">gdb</code>!</i></h4>
+
+        <p class="fragment" style="font-size: 80%; padding-top: 20px;">
+        (think of it as a magical <i class="ep-orange">crystal ball 🔮</i> to see through code)
+        </p>
+      </section>
+
+      <section>
+        <h3>That <i class="red">doesn't</i> look too obvious 😑</h3>
+      </section>
+
+      <section>
+        <h3>The useful <code class="ep-orange">dis</code> module</h3>
+        <div id="left" class="fragment" data-fragment-index="1">
+            <pre style="font-size: 50%;width: 90%;"><code class="python" data-trim data-noescape>
+            from dis import dis
+
+            def add(a, b):
+                return a + b
+
+            dis(add)
+            </code></pre>
+        </div>
+        <div id="right" class="fragment" data-fragment-index="2">
+            <pre style="font-size: 50%;width: 90%;"><code class="bash" data-trim data-noescape>
+2    0 LOAD_FAST       0 (a)
+     2 LOAD_FAST       1 (b)
+     4 BINARY_ADD
+     6 RETURN_VALUE
+            </code></pre>
+            <p class="fragment" data-fragment-index="3">
+            <i class="ep-orange">BINARY_ADD</i> 🤔?
+            </p>
+        </div>
+      </section>
+
+      <section>
+        What's that <i class="ep-orange">PyObject</i> thing?
+      </section>
+
+  <section>
+    <h3>PyObject</h3>
+    <pre style="font-size: 70%;width: 80%;"><code class="c" data-trim data-noescape>
+typedef struct _object {
+    _PyObject_HEAD_EXTRA
+    Py_ssize_t ob_refcnt;
+    struct _typeobject *ob_type;  // ?
+} PyObject;
+    </code></pre>
+  </section>
+
+<section>
+    <div id="left">
+    <pre style="font-size: 20%;width: 90%;"><code class="c" data-trim data-noescape>
+typedef struct _typeobject {
+    PyObject_VAR_HEAD
+    const char *tp_name; /* For printing, in format "<module>.<name>" */
+    Py_ssize_t tp_basicsize, tp_itemsize; /* For allocation */
+
+    /* Methods to implement standard operations */
+
+    destructor tp_dealloc;
+    Py_ssize_t tp_vectorcall_offset;
+    getattrfunc tp_getattr;
+    setattrfunc tp_setattr;
+    PyAsyncMethods *tp_as_async; /* formerly known as tp_compare (Python 2)
+                                    or tp_reserved (Python 3) */
+    reprfunc tp_repr;
+
+    /* Method suites for standard classes */
+
+    PyNumberMethods *tp_as_number;
+    PySequenceMethods *tp_as_sequence;
+    PyMappingMethods *tp_as_mapping;
+
+    /* More standard operations (here for binary compatibility) */
+
+    hashfunc tp_hash;
+    ternaryfunc tp_call;
+    reprfunc tp_str;
+    getattrofunc tp_getattro;
+    setattrofunc tp_setattro;
+
+    /* Functions to access object as input/output buffer */
+    PyBufferProcs *tp_as_buffer;
+
+    /* Flags to define presence of optional/expanded features */
+    unsigned long tp_flags;
+
+    const char *tp_doc; /* Documentation string */
+
+    /* Assigned meaning in release 2.0 */
+    /* call function for all accessible objects */
+    traverseproc tp_traverse;
+
+    /* delete references to contained objects */
+    inquiry tp_clear;
+
+    /* Assigned meaning in release 2.1 */
+    /* rich comparisons */
+    richcmpfunc tp_richcompare;
+
+    /* weak reference enabler */
+    Py_ssize_t tp_weaklistoffset;
+
+    /* Iterators */
+    getiterfunc tp_iter;
+    iternextfunc tp_iternext;
+
+    </code></pre>
+    </div>
+    <div id="right">
+    <pre style="font-size: 20%;width: 90%;"><code class="c" data-trim data-noescape>
+    /* Attribute descriptor and subclassing stuff */
+    struct PyMethodDef *tp_methods;
+    struct PyMemberDef *tp_members;
+    struct PyGetSetDef *tp_getset;
+    struct _typeobject *tp_base;
+    PyObject *tp_dict;
+    descrgetfunc tp_descr_get;
+    descrsetfunc tp_descr_set;
+    Py_ssize_t tp_dictoffset;
+    initproc tp_init;
+    allocfunc tp_alloc;
+    newfunc tp_new;
+    freefunc tp_free; /* Low-level free-memory routine */
+    inquiry tp_is_gc; /* For PyObject_IS_GC */
+    PyObject *tp_bases;
+    PyObject *tp_mro; /* method resolution order */
+    PyObject *tp_cache;
+    PyObject *tp_subclasses;
+    PyObject *tp_weaklist;
+    destructor tp_del;
+
+    /* Type attribute cache version tag. Added in version 2.6 */
+    unsigned int tp_version_tag;
+
+    destructor tp_finalize;
+    vectorcallfunc tp_vectorcall;
+
+    /* bpo-37250: kept for backwards compatibility in CPython 3.8 only */
+    Py_DEPRECATED(3.8) int (*tp_print)(PyObject *, FILE *, int);
+
+#ifdef COUNT_ALLOCS
+    /* these must be last and never explicitly initialized */
+    Py_ssize_t tp_allocs;
+    Py_ssize_t tp_frees;
+    Py_ssize_t tp_maxalloc;
+    struct _typeobject *tp_prev;
+    struct _typeobject *tp_next;
+#endif
+} PyTypeObject;
+
+/* The *real* layout of a type object when allocated on the heap */
+typedef struct _heaptypeobject {
+    /* Note: there's a dependency on the order of these members
+       in slotptr() in typeobject.c . */
+    PyTypeObject ht_type;
+    PyAsyncMethods as_async;
+    PyNumberMethods as_number;
+    PyMappingMethods as_mapping;
+    PySequenceMethods as_sequence; /* as_sequence comes after as_mapping,
+                                      so that the mapping wins when both
+                                      the mapping and the sequence define
+                                      a given operator (e.g. __getitem__).
+                                      see add_operators() in typeobject.c . */
+    PyBufferProcs as_buffer;
+    PyObject *ht_name, *ht_slots, *ht_qualname;
+    struct _dictkeysobject *ht_cached_keys;
+    /* here are optional user slots, followed by the members. */
+} PyHeapTypeObject;
+    </code></pre>
+    </div>
+</section>
+
+  <section>
+    <img width="60%;" src="img/jump.gif" />
+  </section>
+
+
+  <section>
+    <h3>You <i class="red">don't</i> need to learn them all</h3>
+    <ul>
+      <li class="fragment">If you want <code class="ep-orange">int</code>-like type, you implement those.</li>
+      <li class="fragment">If you want <code class="ep-orange">list</code>-like type you implement those.</li>
+      <li class="fragment">If you want <code class="ep-orange">str</code>-like type you implement those.</li>
+      <li class="fragment">...</li>
+    </ul>
+    <h4 class="fragment">Think about <i class="ep-green">PyObject</i> as a <i class="ep-orange">big box</i> 📦, that you can fill according to your needs</h4>
+  </section>
+
+      <!--
+        s.add(),
+        s.add({1,2,3} -> problem it's update()
+        s.addanothersetplease()
+      -->
+
+      <section>
+        <h3>Let's look something different</h3>
+        <h4><i class="ep-orange">Issues with </i><code class="ep-green">sets</code></h4>
+      </section>
+
+      <!-- pop, rock, salsa -->
+      <!-- append (red, blue, green, ?)-->
+      <section>
+        <h3>Three <code class="ep-green">list</code> methods you didn't know</h3>
+        <h4>Number <i class="ep-orange">three</i> will surprise you</code></h4>
+      </section>
+
+      <section>
+        <h3>Improvements in <i class="ep-green">future</i> releases</h3>
+        <h4><i class="ep-orange">things you didn't know 👀</i></h4>
+      </section>
+
+      <section>
+        <h3>What if?</h3>
+        <div id="left" class="fragment">
+          <img src="img/pep657.png" />
+        </div>
+        <div id="right" class="fragment">
+          <img src="img/vscode-pets.png" />
+        </div>
+      </section>
+
+      <section>
+        <h3><i class="ep-green">Did you know</i></h3>
+        <h3>Python is <i class="ep-orange">conference-ready</i>?</h3>
+      </section>
+
+      <section>
+        <h3>There are <i class="ep-orange">many other</i> details 😵</h3>
+        <ul>
+          <li class="fragment">Reference counting 🧮</li>
+          <li class="fragment">Global Interpreter Lock (GIL) 🔒</li>
+          <li class="fragment">Module and Type creation 🤖</li>
+        </ul>
+        <h4 style="margin-top: 40px;" class="fragment">but <i class="red">don't worry</i></h4>
+        <h4 class="fragment">go slowly, and <i class="ep-green">embrace CPython</i></h4>
+      </section>
+
+      <section>
+        <div id="left">
+        <h1>Learn CPython<h1>
+        <h2><i class="ep-orange">by <i class="ep-green">b̷̘̓r̶̲̈́ë̸͎́a̶̧̓k̵̯̈́ĭ̵̜ń̴̰g̴͈̿</i> it</i></h2>
+        </div>
+        <div id="right">
+        <p style="font-size: 80%;margin-top: 10%;">
+          Dr. <i class="ep-orange">Cristián</i> Maureira-Fredes<br/>
+        </p>
+        <p style="font-size: 90%">
+        <i class="ep-orange">@cmaureir</i><br/>
+          <img class="plain" src="img/twitter.png" style="background: rgba(0,0,0,0);height: 40px;">
+          <img class="plain" src="img/github_white.png"  style="background: rgba(0,0,0,0);height: 40px;">
+          <img class="plain" src="img/linkedin.png"  style="background: rgba(0,0,0,0);height: 40px;"><br/>
+        </p>
+        <i class="yellow">Thanks</i> 😃
+        </div>
+      </section>
+
+      <!--***************************************************************************-->
+    </div>
+  </div>
+
+  <script src="dist/reveal.js"></script>
+  <script src="plugin/notes/notes.js"></script>
+  <script src="plugin/markdown/markdown.js"></script>
+  <script src="plugin/highlight/highlight.js"></script>
+  <script>
+    // More info about initialization & config:
+    // - https://revealjs.com/initialization/
+    // - https://revealjs.com/config/
+    Reveal.initialize({
+      hash: true,
+
+      // Learn about plugins: https://revealjs.com/plugins/
+      plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+    });
+  </script>
+  <!-- Hack to have a footer-->
+
+  <!-- 1. Style header/footer <div> so they are positioned as desired: in css/qt.css -->
+  <!-- 2. Create hidden header/footer <div> -->
+  <div id="hidden" style="display:none;">
+    <div id="header">
+      <div id="header-left"></div>
+      <div id="header-right"><img src="img/europython.png" width="150px" /></div>
+      <div id="footer-left"><p style="font-size: 12pt;margin-left: 20px;"><img style="width: 20px; padding: 0; margin: 0; vertical-align: text-top; margin-right: 5px;" src="img/europython.png" /><i class="ep-orange">EuroPython 2021</i> | @cmaureir
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+  <script type="text/javascript">
+    // 3. On Reveal.js ready event, copy header/footer <div> into each `.slide-background` <div>
+    var header = $('#header').html();
+    if ( window.location.search.match( /print-pdf/gi ) ) {
+      Reveal.addEventListener( 'ready', function( event ) {
+        $('.slide-background').append(header);
+      });
+    }
+    else {
+      $('div.reveal').append(header);
+     }
+  </script>
+</body>
+</html>

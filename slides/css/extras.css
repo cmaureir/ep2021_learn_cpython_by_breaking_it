@@ -1,0 +1,7 @@
+/* Links using the URL as text */
+a.url:before { font-family: monospace; content: attr(href); }
+
+/* Lists icon */
+ul {
+  list-style-type: square !important;
+}
